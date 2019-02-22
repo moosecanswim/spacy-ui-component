@@ -11,9 +11,6 @@ services:
         - spacy
     ports:
       - "9000:9000"
-    build:
-      context: .
-      dockerfile: docker/alpine/Dockerfile
     container_name: spacy-container
     environment:
       - LOG_LEVEL=DEBUG
