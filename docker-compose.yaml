@@ -1,0 +1,137 @@
+version: '2'
+
+services:
+  spacy-service:
+    image: deciphernow/spacy-service
+    hostname: spacy
+    networks:
+      default:
+        aliases:
+          - spacy-service
+          - spacy
+    ports:
+      - '9000:9000'
+    build:
+      context: .
+      dockerfile: docker/alpine/Dockerfile
+    container_name: spacy-container
+    environment:
+      - LOG_LEVEL=DEBUG
+
+  spacy-service-proxy:
+    networks:
+      - default
+    image: deciphernow/gm-proxy:latest
+    ports:
+      - 7080:8080
+      - 7081:8081
+      - 7001:8001
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - SERVICE_HOST=spacy-service
+      - SERVICE_PORT=9000
+      - ZK_ANNOUNCE_PATH=/services/spacy-service/0.2/
+      - ZK_ADDRS=zk:2181
+      - ZK_METRICS_ANNOUNCE_PORT=8081
+      - ENABLE_CLOUDWATCH=false
+      - METRICS_HOST=0.0.0.0
+      - METRICS_PORT=8081
+      - USE_METRICS=false
+      - EMIT_EVENTS=true
+      - EMIT_FULL_RESPONSE=false
+      - USE_KAFKA=false
+      - ENFORCE_AUDIT=false
+
+  gm-proxy-edge:
+    networks:
+      - default
+    image: deciphernow/gm-proxy:latest
+    ports:
+      - 9443:8443
+      - 7002:8001
+    volumes:
+      - ./proxy_edge_config.yml:/app/config.yaml
+      - ./spacy_service/certificates/:/app/certs/
+
+  discovery:
+    networks:
+      - default
+    image: deciphernow/discovery-service:2.0.2-SNAPSHOT
+    depends_on:
+      - zk
+    ports:
+      - 9080:9080
+      - 8443:8443
+      - 8080:8080
+    environment:
+      - DISCOVERY_ADMIN_PORT=9080
+      - DISCOVERY_HTTPS_PORT=8443
+      - DISCOVERY_HTTP_PORT=8080
+      - DISCOVERY_KEYSTORE_PASSWORD=password
+      - DISCOVERY_TRUSTSTORE_PASSWORD=password
+      - DISCOVERY_ZOOKEEPER_ANNOUNCEMENT_POINT=/services/discovery-service/1.0
+      - DISCOVERY_ZOOKEEPER_CONNECTION=zk:2181
+      - DISCOVERY_LOG_LEVEL=INFO
+      - DISCOVERY_SERVICE_0_CAPABILITY=Discovery
+      - DISCOVERY_SERVICE_0_DOCUMENTATION=/services/discovery-service/1.0/home.html
+      - DISCOVERY_SERVICE_0_PROMETHEUSJOB=
+      - DISCOVERY_SERVICE_0_MAXIMUM=1
+      - DISCOVERY_SERVICE_0_METERED=true
+      - DISCOVERY_SERVICE_0_METRICS_TEMPLATE=http://{{host}}:{{port}}/admin/metrics.json
+      - DISCOVERY_SERVICE_0_MINIMUM=1
+      - DISCOVERY_SERVICE_0_NAME=Grey Matter Discovery
+      - DISCOVERY_SERVICE_0_OWNER=Decipher
+      - DISCOVERY_SERVICE_0_RUNTIME=JVM
+      - DISCOVERY_SERVICE_0_THREADED=true
+      - DISCOVERY_SERVICE_0_THREADS_TEMPLATE=http://{{host}}:{{port}}/admin/threads
+      - DISCOVERY_SERVICE_0_VERSION=1.0
+      - DISCOVERY_SERVICE_0_ZOOKEEPER_ANNOUNCEMENT_POINT=/services/discovery-service/1.0/admin
+      - DISCOVERY_SERVICE_1_CAPABILITY=Spacy
+      - DISCOVERY_SERVICE_1_DOCUMENTATION=/services/spacy-service/0.2/
+      - DISCOVERY_SERVICE_1_PROMETHEUSJOB=
+      - DISCOVERY_SERVICE_1_MAXIMUM=1
+      - DISCOVERY_SERVICE_1_METERED=true
+      - DISCOVERY_SERVICE_1_METRICS_TEMPLATE=http://{{host}}:{{port}}/metrics
+      - DISCOVERY_SERVICE_1_MINIMUM=1
+      - DISCOVERY_SERVICE_1_NAME=Spacy NLP Service
+      - DISCOVERY_SERVICE_1_OWNER=Decipher
+      - DISCOVERY_SERVICE_1_RUNTIME=GO
+      - DISCOVERY_SERVICE_1_THREADED=false
+      - DISCOVERY_SERVICE_1_THREADS_TEMPLATE=
+      - DISCOVERY_SERVICE_1_VERSION=1.0
+      - DISCOVERY_SERVICE_1_ZOOKEEPER_ANNOUNCEMENT_POINT=/services/spacy-service/0.2/metrics
+
+  dashboard:
+    networks:
+      - default
+    image: deciphernow/gm-fabric-dashboard:latest
+    ports:
+      - 1337:1337
+    environment:
+      - FABRIC_SERVER=/services/discovery-service/1.0
+
+  zk:
+    image: wurstmeister/zookeeper
+    networks:
+      - default
+    ports:
+      - '2181:2181'
+
+  kafka:
+    hostname: kafka
+    image: wurstmeister/kafka:0.10.2.1 #0.8.2.1 or 0.10.2.1
+    environment:
+      - KAFKA_HEAP_OPTS="-Xmx1G -Xms500M"
+      - KAFKA_ADVERTISED_HOST=kafka
+      - KAFKA_ADVERTISED_PORT=9092
+      - KAFKA_ZOOKEEPER_CONNECT=zk
+      - KAFKA_CREATE_TOPICS=spacy-service-event:1:1,odrive-event:1:1 #for 0.8.2.1 use odrive-event #for 0.10.2.1 use odrive-event:1:1  # topic:replication-factor:partitions
+    ports:
+      - '22181:2181'
+      - '29092:9092'
+      - '9092:9092'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zk
