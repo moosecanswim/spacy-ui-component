@@ -146,7 +146,7 @@ proxier:
       - ./docker/proxier:/tmp/docker
     ports:
       - '47080:80'
-      - '8080:443'
+      - '9000:443'
       - '2222:22'
     depends_on:
       - ui
