@@ -139,8 +139,8 @@ services:
 proxier:
     image: nginx:1.13
     environment:
-      - SPACEY_SERVICE_HOST=spacy-service
-      - SPACEY_SERVICE_PORT=9000
+      - SPACY_SERVICE_HOST=spacy-service
+      - SPACY_SERVICE_PORT=9000
 
     volumes:
       - ./docker/proxier:/tmp/docker
@@ -157,4 +157,4 @@ proxier:
     # prevent docker-compose from trying to replace the variables (i.e., $VAR becomes $$VAR).
     # end of command: < /tmp/docker/odrive.nginx.conf.tpl > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
     # command: /bin/bash -c "env && envsubst '$$ODRIVE_SERVICE_HOST $$ODRIVE_SERVICE_PORT $$FINDER_EXTERNAL_IP $$FINDER_HOST $$FINDER_PORT $$AAC_SERVICE_HOST $$AAC_SERVICE_PORT $$CTE_APPS_SERVICE_HOST $$CTE_APPS_SERVICE_PORT $$CTE_USER_SERVICE_HOST $$CTE_USER_SERVICE_PORT' < /tmp/docker/odrive.nginx.conf.tpl > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
-    command: /bin/bash -c "env && envsubst '$$SPACEY_SERVICE_HOST $$SPACEY_SERVICE_PORT' < /tmp/docker/nginx.conf.tpl > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    command: /bin/bash -c "env && envsubst '$$SPACY_SERVICE_HOST $$SPACY_SERVICE_PORT' < /tmp/docker/nginx.conf.tpl > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
