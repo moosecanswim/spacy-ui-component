@@ -15,7 +15,7 @@ server {
     #
     location ^~ /analyses/pos {
       rewrite ^/analyses/pos/(.*) /$1 break;
-      proxy_pass        https://${SPACEY_SERVICE_HOST}:${SPACEY_SERVICE_PORT};
+      proxy_pass        https://${SPACY_SERVICE_HOST}:${SPACY_SERVICE_PORT};
       proxy_set_header USER_DN    $ssl_client_s_dn;
         proxy_set_header Host       $host;
         proxy_set_header X-Real-IP  $remote_addr;

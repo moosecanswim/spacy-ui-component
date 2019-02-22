@@ -9,8 +9,8 @@ services:
         aliases:
         - spacy-service
         - spacy
-    ports:
-      - "9000:9000"
+    # ports:
+    #   - "9000:9000"
     container_name: spacy-container
     environment:
       - LOG_LEVEL=DEBUG
@@ -133,7 +133,7 @@ services:
       depends_on:
           - zk
 
-proxier:
+  proxier:
     image: nginx:1.13
     environment:
       - SPACY_SERVICE_HOST=spacy-service
@@ -146,7 +146,8 @@ proxier:
       - '9000:443'
       - '2222:22'
     depends_on:
-      - ui
+      - spacy-service
+      - spacy-service-proxy
     # The envsubst command will swap out anything in the input file that begins with $ with a corresponding env
     # variable, or if one can't be found, an empty string. Since nginx conf files also make use of $-prefixed
     # variables, we will pass in the specific variables we want envsubst to replace (this is called the "shell
