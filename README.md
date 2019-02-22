@@ -8,6 +8,18 @@ This project will be abstracted to allow for implementing additional NLP service
 
 ### Basic Usage
 
+##### Install
+
+```
+npm install spacy-ui-component
+```
+
+##### Start Spacy Service
+
+A basic `docker-compose.yaml` file is provided for you to integrate into your Docker-based development environment. It exposes the service on port 9000 for you to run via `docker-compose up -d`.
+
+##### Usage
+
 ```
 import analyze from 'spacy-ui-component';
 
@@ -22,7 +34,7 @@ export default analyze(
 );
 ```
 
-#### Output:
+##### Output:
 
 ```
 {
