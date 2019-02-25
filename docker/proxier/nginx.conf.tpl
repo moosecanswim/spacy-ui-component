@@ -4,18 +4,18 @@ map $http_upgrade $connection_upgrade {
 }
 
 server {
-    listen 80;
     listen 9000;
-    #listen 443 ssl;
+    listen *;
+    listen 443 ssl;
     server_name localhost;
-    #ssl on;
+    ssl on;
     error_log   /dev/stdout debug;
 
     #
     # Proxy spacey service requests
     #
     location ^~ /analyses {
-      #rewrite ^/analyses/(.*) /$1 break;
+      rewrite ^/analyses/(.*) /$1 break;
       proxy_pass        https://${SPACY_SERVICE_HOST}:${SPACY_SERVICE_PORT};
       #proxy_set_header USER_DN    $ssl_client_s_dn;
       #proxy_set_header Host       $host;

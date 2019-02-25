@@ -27,8 +27,6 @@ services:
       - '47080:80'
       - '8080:443'
       - '2222:22'
-    expose: 
-      - 9000
     depends_on:
       - spacy-service
     # The envsubst command will swap out anything in the input file that begins with $ with a corresponding env
